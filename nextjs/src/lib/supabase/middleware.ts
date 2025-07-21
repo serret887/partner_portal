@@ -34,6 +34,25 @@ export async function updateSession(request: NextRequest) {
     // IMPORTANT: DO NOT REMOVE auth.getUser()
 
     const {data: user} = await supabase.auth.getUser()
+    
+    // Check if user is authenticated and trying to access protected routes
+    if (user && user.user && request.nextUrl.pathname.startsWith('/app')) {
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+            .from('partner_profiles')
+            .select('onboarding_completed')
+            .eq('user_id', user.user.id)
+            .single()
+
+        // If no profile exists or onboarding is not completed, redirect to onboarding
+        if (!profile || !profile.onboarding_completed) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/onboarding'
+            return NextResponse.redirect(url)
+        }
+    }
+    
+    // Redirect unauthenticated users to login
     if (
         (!user || !user.user) && request.nextUrl.pathname.startsWith('/app')
     ) {

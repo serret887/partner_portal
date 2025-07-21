@@ -35,7 +35,23 @@ export default function LoginPage() {
             if (mfaData.nextLevel === 'aal2' && mfaData.nextLevel !== mfaData.currentLevel) {
                 setShowMFAPrompt(true);
             } else {
-                router.push('/app');
+                // Check if user has completed onboarding
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('partner_profiles')
+                        .select('onboarding_completed')
+                        .eq('user_id', user.id)
+                        .single();
+
+                    if (!profile || !profile.onboarding_completed) {
+                        router.push('/onboarding');
+                    } else {
+                        router.push('/app');
+                    }
+                } else {
+                    router.push('/app');
+                }
                 return;
             }
         } catch (err) {

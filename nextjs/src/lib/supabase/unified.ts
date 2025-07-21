@@ -94,6 +94,27 @@ export class SassClient {
         return this.client.from('todo_list').update({done: true}).eq('id', id)
     }
 
+    // Partner Profile Methods
+    async getPartnerProfile(userId: string) {
+        return this.client.from('partner_profiles').select('*').eq('user_id', userId).single();
+    }
+
+    async createPartnerProfile(profile: Database["public"]["Tables"]["partner_profiles"]["Insert"]) {
+        return this.client.from('partner_profiles').insert(profile);
+    }
+
+    async updatePartnerProfile(userId: string, updates: Database["public"]["Tables"]["partner_profiles"]["Update"]) {
+        return this.client.from('partner_profiles').update(updates).eq('user_id', userId);
+    }
+
+    async completeOnboarding(userId: string) {
+        return this.client.from('partner_profiles').update({ onboarding_completed: true }).eq('user_id', userId);
+    }
+
+    async verifyPhoneNumber(userId: string) {
+        return this.client.from('partner_profiles').update({ is_phone_verified: true }).eq('user_id', userId);
+    }
+
     getSupabaseClient() {
         return this.client;
     }

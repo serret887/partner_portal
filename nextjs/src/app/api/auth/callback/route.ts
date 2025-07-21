@@ -26,7 +26,21 @@ export async function GET(request: Request) {
             return NextResponse.redirect(new URL('/auth/2fa', request.url))
         }
 
-        // If MFA is not required or already verified, proceed to app
+        // Check if user has completed onboarding
+        const { data: { user } } = await client.auth.getUser()
+        if (user) {
+            const { data: profile } = await client
+                .from('partner_profiles')
+                .select('onboarding_completed')
+                .eq('user_id', user.id)
+                .single()
+
+            if (!profile || !profile.onboarding_completed) {
+                return NextResponse.redirect(new URL('/onboarding', request.url))
+            }
+        }
+
+        // If MFA is not required or already verified, and onboarding is complete, proceed to app
         return NextResponse.redirect(new URL('/app', request.url))
     }
 
